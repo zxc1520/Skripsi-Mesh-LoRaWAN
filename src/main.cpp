@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include "LoraMesher.h"
+#include <LoRa.h>
 #include <Adafruit_Sensor.h>
 
 #include <ArduinoJson.h>
@@ -70,6 +71,8 @@ struct dataPacket {
     int cm;
     String src;
     String timestamp;
+    int rssi;
+    float snr;
 };
 
 dataPacket* sensorsPacket = new dataPacket;
@@ -100,6 +103,8 @@ void printPacket(dataPacket data) {
     int cm = doc["distance"];
     String src = doc["address_origin"];
     String timestamp = doc["timestamp"];
+    int rssi = doc["rssi"];
+    float snr = doc["snr"];
 
     Serial.print("LDR: ");
     Serial.println(ldr);
@@ -113,7 +118,10 @@ void printPacket(dataPacket data) {
     Serial.println(src);
     Serial.print("Timestamp: ");
     Serial.println(timestamp);
-
+    Serial.print("RSSI: ");
+    Serial.println(rssi);
+    Serial.print("SNR: ");
+    Serial.println(snr);
 }
 
 /**
@@ -266,6 +274,10 @@ void sendLoRaMessage(void*) {
 
         sensorsPacket->timestamp = dateString;
 
+        sensorsPacket->rssi = LoRa.packetRssi();
+
+        sensorsPacket->snr = LoRa.packetSnr();
+
         //Create packet and send it.
         radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
 
@@ -275,6 +287,8 @@ void sendLoRaMessage(void*) {
         doc["distance"] = sensorsPacket->cm;
         doc["address_origin"] = sensorsPacket->src;
         doc["timestamp"] = sensorsPacket->timestamp;
+        doc["rssi"] = sensorsPacket->rssi;
+        doc["snr"] = sensorsPacket->snr;
 
         doc.shrinkToFit();
         serializeJson(doc, datas);
