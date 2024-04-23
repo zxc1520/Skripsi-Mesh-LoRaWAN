@@ -3,6 +3,8 @@
 #include <LoRa.h>
 #include <Adafruit_Sensor.h>
 
+#include "RadioLib.h"
+
 #include <ArduinoJson.h>
 
 #include "sensors/DHTSensor.h"
@@ -71,8 +73,8 @@ struct dataPacket {
     int cm;
     String src;
     String timestamp;
-    int rssi;
-    float snr;
+    int8_t rssi;
+    int snr;
 };
 
 dataPacket* sensorsPacket = new dataPacket;
@@ -104,7 +106,7 @@ void printPacket(dataPacket data) {
     String src = doc["address_origin"];
     String timestamp = doc["timestamp"];
     int rssi = doc["rssi"];
-    float snr = doc["snr"];
+    int snr = doc["snr"];
 
     Serial.print("LDR: ");
     Serial.println(ldr);
@@ -274,9 +276,9 @@ void sendLoRaMessage(void*) {
 
         sensorsPacket->timestamp = dateString;
 
-        sensorsPacket->rssi = LoRa.packetRssi();
+        sensorsPacket->rssi = radio.getLoraRssi();
 
-        sensorsPacket->snr = LoRa.packetSnr();
+        sensorsPacket->snr = radio.getLoraSnr();
 
         //Create packet and send it.
         radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
