@@ -32,8 +32,8 @@
 // Light Sense Pin
 #define LIGHT_DO    36
 
-// #define SCREEN_WIDTH 128 // OLED display width, in pixels
-// #define SCREEN_HEIGHT 64 // OLED display height, in pixels
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
 
 #define I2C_SDA     21          
 #define I2C_SCL     22
@@ -46,15 +46,14 @@ TimerHandle_t wifiReconnecTimer;
 RtcDS3231<TwoWire> Rtc(Wire);
 RtcDateTime rtc;
 
-// // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
-// #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
-// Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     -1
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 LoraMesher& radio = LoraMesher::getInstance();
 DHTSensor dhtData(DHT_PIN, DHT11);
 HCSR04Sensor distances(ECHO_PIN, TRIG_PIN);
 // MQTTService mqtt(mqttClient, mqttReconnectTimmer, wifiReconnecTimer);
-// RTC_DS3231 rtc;
 
 uint32_t dataCounter = 0;
 
@@ -74,7 +73,7 @@ struct dataPacket {
     String src;
     String timestamp;
     int8_t rssi;
-    int snr;
+    int8_t snr;
 };
 
 dataPacket* sensorsPacket = new dataPacket;
@@ -96,34 +95,37 @@ void led_Flash(uint16_t flashes, uint16_t delaymS) {
  * @param data
  */
 void printPacket(dataPacket data) {
-    String json = datas;
-    deserializeJson(doc, json);
 
-    int ldr = doc["ldr"];
-    float temp = doc["temperature"];
-    float humid = doc["humid"];
-    int cm = doc["distance"];
-    String src = doc["address_origin"];
-    String timestamp = doc["timestamp"];
-    int rssi = doc["rssi"];
-    int snr = doc["snr"];
+    RtcDateTime receiverDate = Rtc.GetDateTime();
 
-    Serial.print("LDR: ");
-    Serial.println(ldr);
-    Serial.print("Temp: ");
-    Serial.println(temp);
-    Serial.print("Humid: ");
-    Serial.println(humid);
-    Serial.print("Distance: ");
-    Serial.println(cm);
-    Serial.print("address: ");
-    Serial.println(src);
-    Serial.print("Timestamp: ");
-    Serial.println(timestamp);
-    Serial.print("RSSI: ");
-    Serial.println(rssi);
-    Serial.print("SNR: ");
-    Serial.println(snr);
+    char receiverDateString[26];
+
+    int index = snprintf_P(receiverDateString,
+        countof(receiverDateString),
+        PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+        receiverDate.Year(),
+        receiverDate.Month(),
+        receiverDate.Day(),
+        receiverDate.Hour(),
+        receiverDate.Minute(),
+        receiverDate.Second()
+    );
+
+    receiverDateString[index] = '\0';
+
+    doc["ldr"] = sensorsPacket->ldr;
+    doc["humid"] = sensorsPacket->humid;
+    doc["temp"] = sensorsPacket->temp;
+    doc["distance"] = sensorsPacket->cm;
+    doc["address_origin"] = sensorsPacket->src;
+    doc["node_timestamp"] = sensorsPacket->timestamp;
+    doc["arrived_timestamp"] = receiverDateString;
+    doc["rssi"] = sensorsPacket->rssi;
+    doc["snr"] = sensorsPacket->snr;
+
+    doc.shrinkToFit();
+    serializeJson(doc, datas);
+    serializeJsonPretty(doc, Serial);
 }
 
 /**
@@ -209,17 +211,6 @@ void setupLoraMesher() {
     Serial.println("Lora initialized");
 }
 
-// uint32_t printTimeStamp(const RtcDateTime& dateTime) {
-//     char dateString[26];
-
-//     return snprintf_P(dateString, countof(dateString),
-//         PSTR("%02u/%02u/%04u %02u:%02u:%02u"),
-//         dateTime.Year(),
-//         dateTime.Month(),
-//         dateTime.Day(),
-//     );
-// }
-
 void sendLoRaMessage(void*) {
     for (;;) {
         Serial.printf("Send packet %d\n", dataCounter);
@@ -263,7 +254,7 @@ void sendLoRaMessage(void*) {
 
         snprintf_P(dateString,
             countof(dateString),
-            PSTR("%02u-%02u-%02uT%02u:%02u:%02uZ"),
+            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
             date.Year(),
             date.Month(),
             date.Day(),
@@ -271,8 +262,6 @@ void sendLoRaMessage(void*) {
             date.Minute(),
             date.Second()
         );
-
-        // String dateString = NTP.getTimeDateString();
 
         sensorsPacket->timestamp = dateString;
 
@@ -282,18 +271,6 @@ void sendLoRaMessage(void*) {
 
         //Create packet and send it.
         radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
-
-        doc["ldr"] = sensorsPacket->ldr;
-        doc["humid"] = sensorsPacket->humid;
-        doc["temp"] = sensorsPacket->temp;
-        doc["distance"] = sensorsPacket->cm;
-        doc["address_origin"] = sensorsPacket->src;
-        doc["timestamp"] = sensorsPacket->timestamp;
-        doc["rssi"] = sensorsPacket->rssi;
-        doc["snr"] = sensorsPacket->snr;
-
-        doc.shrinkToFit();
-        serializeJson(doc, datas);
 
         //Wait 20 seconds to send the next packet
         vTaskDelay(20000 / portTICK_PERIOD_MS);
@@ -479,66 +456,65 @@ void setup() {
 
     createSendMessage();
 
-    // if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
-    //     Serial.println(F("SSD1306 allocation failed"));
-    //     for(;;);
-    // }
-    // delay(2000);
-    // display.clearDisplay();
+    if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+        Serial.println(F("SSD1306 allocation failed"));
+        for(;;);
+    }
+    delay(2000);
+    display.clearDisplay();
 
-    // char addrStr[15];
-    // snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
+    char addrStr[15];
+    snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
 
-    // display.setTextSize(1);
-    // display.setTextColor(WHITE);
-    // display.setCursor(0, 10);
-    // // Display static text
-    // display.println(addrStr);
-    // display.display(); 
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(0, 10);
+    // Display static text
+    display.println(addrStr);
+    display.display(); 
 
-    mqttReconnectTimmer = xTimerCreate( 
-        "mqttTimer", 
-        pdMS_TO_TICKS(2000), 
-        pdFALSE, 
-        (void*)0, 
-        reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
-    );
+    // mqttReconnectTimmer = xTimerCreate( 
+    //     "mqttTimer", 
+    //     pdMS_TO_TICKS(2000), 
+    //     pdFALSE, 
+    //     (void*)0, 
+    //     reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
+    // );
 
-    wifiReconnecTimer = xTimerCreate(
-        "wifiTimer", 
-        pdMS_TO_TICKS(2000), 
-        pdFALSE, 
-        (void*)0, 
-        reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
-    );
+    // wifiReconnecTimer = xTimerCreate(
+    //     "wifiTimer", 
+    //     pdMS_TO_TICKS(2000), 
+    //     pdFALSE, 
+    //     (void*)0, 
+    //     reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
+    // );
 
-    WiFi.onEvent(WiFiEvent);
+    // WiFi.onEvent(WiFiEvent);
 
-    mqttClient.onConnect(onMqttConnect);
-    mqttClient.onDisconnect(onMqttDisconnect);
-    mqttClient.onPublish(onMqttPublish);
-    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+    // mqttClient.onConnect(onMqttConnect);
+    // mqttClient.onDisconnect(onMqttDisconnect);
+    // mqttClient.onPublish(onMqttPublish);
+    // mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
-    mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
-    connectToWifi();
+    // mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
+    // connectToWifi();
 }
 
 void loop() {
-    unsigned long currentMillis = millis();
+    // unsigned long currentMillis = millis();
 
-    if (currentMillis - previousMillis >= interval)
-    {
-        /* code */
-        previousMillis = currentMillis;
+    // if (currentMillis - previousMillis >= interval)
+    // {
+    //     /* code */
+    //     previousMillis = currentMillis;
 
-        // Publishing an LDR Sensor Value
-        uint16_t packetIdPubData = mqttClient.publish(
-            MQTT_PUB_TOPIC, 
-            1, 
-            true, 
-            String(datas).c_str()
-        );
-        Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
-    }
-    
+    //     // Publishing an LDR Sensor Value
+    //     uint16_t packetIdPubData = mqttClient.publish(
+    //         MQTT_PUB_TOPIC, 
+    //         1, 
+    //         true, 
+    //         String(datas).c_str()
+    //     );
+    //     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
+    // }
 }
