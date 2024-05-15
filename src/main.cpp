@@ -39,6 +39,15 @@
 #define I2C_SCL     22
 #define I2C_DS3231_RTC 0xd0
 
+#define BUTTON_PIN  34
+#define SHORT_PRESS 300
+#define LONG_PRESS  1000
+
+int lastState = LOW;
+int currentState;
+unsigned long pressedTime = 0;
+unsigned long releasedTime = 0;
+
 AsyncMqttClient mqttClient;
 TimerHandle_t mqttReconnectTimmer;
 TimerHandle_t wifiReconnecTimer;
@@ -62,7 +71,7 @@ JsonDocument doc;
 unsigned long previousMillis = 0;
 const long interval = 25000; 
 
-char datas[128];
+String datas;
 char mqttData[128];
 
 struct dataPacket {
@@ -71,7 +80,8 @@ struct dataPacket {
     float humid;
     int cm;
     String src;
-    String timestamp;
+    String nodeTimestamp;
+    String arrivedTimestamp;
     int8_t rssi;
     int8_t snr;
 };
@@ -100,7 +110,7 @@ void printPacket(dataPacket data) {
 
     char receiverDateString[26];
 
-    int index = snprintf_P(receiverDateString,
+    snprintf_P(receiverDateString,
         countof(receiverDateString),
         PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
         receiverDate.Year(),
@@ -111,15 +121,15 @@ void printPacket(dataPacket data) {
         receiverDate.Second()
     );
 
-    receiverDateString[index] = '\0';
+    sensorsPacket->arrivedTimestamp = receiverDateString;
 
     doc["ldr"] = sensorsPacket->ldr;
     doc["humid"] = sensorsPacket->humid;
     doc["temp"] = sensorsPacket->temp;
     doc["distance"] = sensorsPacket->cm;
     doc["address_origin"] = sensorsPacket->src;
-    doc["node_timestamp"] = sensorsPacket->timestamp;
-    doc["arrived_timestamp"] = receiverDateString;
+    doc["node_timestamp"] = sensorsPacket->nodeTimestamp;
+    doc["arrived_timestamp"] = sensorsPacket->arrivedTimestamp;
     doc["rssi"] = sensorsPacket->rssi;
     doc["snr"] = sensorsPacket->snr;
 
@@ -211,93 +221,22 @@ void setupLoraMesher() {
     Serial.println("Lora initialized");
 }
 
-void sendLoRaMessage(void*) {
-    for (;;) {
-        Serial.printf("Send packet %d\n", dataCounter);
+void printDateTime(const RtcDateTime &date) {
+    char dateString[26];
 
-        int nilaiSensor = analogRead(LIGHT_DO);
-        sensorsPacket->ldr = nilaiSensor;
-
-        float humid = dhtData.listen();
-        float temp = dhtData.temperature();
-
-        if (isnan(humid) || isnan(temp))
-        {
-            /* code */
-            Serial.print("Failed to load sensor");
-        } else
-        {
-            /* code */
-            sensorsPacket->humid = humid;
-            sensorsPacket->temp = temp;
-        }
-
-        int dist = distances.listen();
-
-        if (dist < 0)
-        {
-            Serial.print("Failed to attempt calculation !");
-        } else
-        {
-            sensorsPacket->cm = dist;
-        }
-
-        char addrStr[15];
-        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
-
-        addrStr[n] = '\0';
-        sensorsPacket->src = addrStr;
-
-        RtcDateTime date = Rtc.GetDateTime();
-        // uint32_t unixTime = now.Unix32Time();
-        char dateString[26];
-
-        snprintf_P(dateString,
-            countof(dateString),
-            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-            date.Year(),
-            date.Month(),
-            date.Day(),
-            date.Hour(),
-            date.Minute(),
-            date.Second()
-        );
-
-        sensorsPacket->timestamp = dateString;
-
-        sensorsPacket->rssi = radio.getLoraRssi();
-
-        sensorsPacket->snr = radio.getLoraSnr();
-
-        //Create packet and send it.
-        radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
-
-        //Wait 20 seconds to send the next packet
-        vTaskDelay(20000 / portTICK_PERIOD_MS);
-    }
-}
-
-void createSendMessage() {
-    TaskHandle_t sendLoRaMessage_Handle = NULL;
-
-    BaseType_t res = xTaskCreate(
-        sendLoRaMessage, 
-        "Send a LoRa Message Routine",
-        4098,
-        (void* ) 1,
-        1,
-        &sendLoRaMessage_Handle
+    snprintf_P(dateString,
+        countof(dateString),
+        PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+        date.Year(),
+        date.Month(),
+        date.Day(),
+        date.Hour(),
+        date.Minute(),
+        date.Second()
     );
-    if (res != pdPASS)
-    {
-        /* code */
-        Serial.printf("Task creation gave error: %d\n");
-        vTaskDelete(sendLoRaMessage_Handle);
-    }
-    
 }
 
-bool wasError(const char *errorTopic = "")
+bool wasError(const char* errorTopic = "")
 {
     uint8_t error = Rtc.LastError();
     if (error != 0)
@@ -337,9 +276,114 @@ bool wasError(const char *errorTopic = "")
     return false;
 }
 
+void sendLoRaMessage(void*) {
+    for (;;) {
+        Serial.printf("Send packet %d\n", dataCounter);
+
+        int nilaiSensor = analogRead(LIGHT_DO);
+        sensorsPacket->ldr = nilaiSensor;
+
+        float humid = dhtData.listen();
+        float temp = dhtData.temperature();
+
+        if (isnan(humid) || isnan(temp))
+        {
+            /* code */
+            Serial.print("Failed to load sensor");
+        } else
+        {
+            /* code */
+            sensorsPacket->humid = humid;
+            sensorsPacket->temp = temp;
+        }
+
+        int dist = distances.listen();
+
+        if (dist < 0)
+        {
+            Serial.print("Failed to attempt calculation !");
+        } else
+        {
+            sensorsPacket->cm = dist;
+        }
+
+        char addrStr[15];
+        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+        addrStr[n] = '\0';
+        sensorsPacket->src = addrStr;
+
+        if (!Rtc.IsDateTimeValid()) 
+        {
+            if (!wasError("loop IsDateTimeValid"))
+            {
+                Serial.println("RTC lost confidence in the DateTime!");
+            }
+        }
+
+        RtcDateTime date = Rtc.GetDateTime();
+        if (!wasError("loop GetDateTime"))
+        {
+            printDateTime(date);
+            Serial.println();
+        }
+
+        // uint32_t unixTime = now.Unix32Time();
+        char dateString[26];
+
+        snprintf_P(dateString,
+            countof(dateString),
+            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+            date.Year(),
+            date.Month(),
+            date.Day(),
+            date.Hour(),
+            date.Minute(),
+            date.Second()
+        );
+
+        sensorsPacket->nodeTimestamp = dateString;
+
+        sensorsPacket->rssi = radio.getLoraRssi();
+
+        sensorsPacket->snr = radio.getLoraSnr();
+
+        //Create packet and send it.
+        radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
+
+        //Wait 20 seconds to send the next packet
+        vTaskDelay(20000 / portTICK_PERIOD_MS);
+    }
+}
+
+TaskHandle_t sendLoRaMessage_Handle = NULL;
+
+void createSendMessage() {
+
+    BaseType_t res = xTaskCreate(
+        sendLoRaMessage, 
+        "Send a LoRa Message Routine",
+        4098,
+        (void* ) 1,
+        1,
+        &sendLoRaMessage_Handle
+    );
+    if (res != pdPASS)
+    {
+        /* code */
+        Serial.printf("Task creation gave error: %d\n");
+        vTaskDelete(sendLoRaMessage_Handle);
+    }
+}
+
 void connectToWifi() {
     Serial.println("Connecting to Wi-Fi...");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+}
+
+void disconnectWifi() {
+    Serial.println("Disconnecting WiFi...");
+    WiFi.disconnect();
 }
 
 void connectToMqtt() {
@@ -354,6 +398,8 @@ void WiFiEvent(WiFiEvent_t event) {
           Serial.println("WiFi connected");
           Serial.println("IP address: ");
           Serial.println(WiFi.localIP());
+          Serial.print("WiFi Status: ");
+          Serial.println(WiFi.status());
           connectToMqtt();
           break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
@@ -368,6 +414,9 @@ void onMqttConnect(bool sessionPresent) {
     Serial.println("Connected to MQTT.");
     Serial.print("Session present: ");
     Serial.println(sessionPresent);
+
+    uint16_t packetIdSub = mqttClient.subscribe(MQTT_SUB_TOPIC, 0);
+    Serial.println("Subscribing at QoS 0");
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
@@ -377,10 +426,59 @@ void onMqttDisconnect(AsyncMqttClientDisconnectReason reason) {
     }
 }
 
+void onMqttSubscribe(uint16_t packetId, uint8_t qos) {
+    Serial.println("Subscribe Acked !");
+    Serial.print(" packetId: ");
+    Serial.println(packetId);
+    Serial.print(" qos: ");
+    Serial.println(qos);
+}
+
+void onMqttUnSubscribe(uint16_t packetId) {
+    Serial.println("Unsubscribe Acknowledged");
+    Serial.print(" packetId: ");
+    Serial.println(packetId);
+}
+
 void onMqttPublish(uint16_t packetId) {
     Serial.print("Publish acknowledged.");
     Serial.print("  packetId: ");
     Serial.println(packetId);
+}
+
+void onMqttMessage(
+    char* topic, 
+    char* payload,
+    AsyncMqttClientMessageProperties prop,
+    size_t len,
+    size_t index,
+    size_t total
+) {
+    String messageTemp;
+    for (int i = 0; i < len; i++)
+    {
+        /* code */
+        messageTemp += (char)payload[i];
+    }
+
+    if (strcmp(topic, MQTT_SUB_TOPIC) == 0)
+    {
+        /* code */
+        Serial.println("True");
+    }
+
+    if (messageTemp == "SEND_DATA")
+    {
+        /* code */
+        createSendMessage();
+        Serial.println("Sensor Data Begin !");
+    }
+    
+    Serial.println("Publish received!");
+    Serial.print(" message: ");
+    Serial.println(messageTemp);
+    Serial.print(" topic: ");
+    Serial.println(topic);
 }
 
 void setup() {
@@ -389,6 +487,13 @@ void setup() {
     Wire.begin();
 
     Rtc.Begin();
+
+    Serial.println("initBoard");
+    pinMode(BOARD_LED, OUTPUT); //setup pin as output for indicator LED
+    led_Flash(2, 125);          //two quick LED flashes to indicate program start
+    setupLoraMesher();
+
+    createSendMessage();
 
 #if defined(WIRE_HAS_TIMEOUT)
     Wire.setWireTimeout(3000 /* us */, true /* reset_on_timeout */);
@@ -440,21 +545,11 @@ void setup() {
     wasError("setup Enable32kHzPin");
     Rtc.SetSquareWavePin(DS3231SquareWavePin_ModeNone);
     wasError("setup SetSquareWavePin");
-    
-    // NTP.begin("pool.ntp.org", 7, true, 0);
 
     pinMode(TRIG_PIN, OUTPUT);
     pinMode(ECHO_PIN, INPUT);
-
     dhtData.setup();
     distances.setup();
-
-    Serial.println("initBoard");
-    pinMode(BOARD_LED, OUTPUT); //setup pin as output for indicator LED
-    led_Flash(2, 125);          //two quick LED flashes to indicate program start
-    setupLoraMesher();
-
-    createSendMessage();
 
     if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
         Serial.println(F("SSD1306 allocation failed"));
@@ -473,48 +568,51 @@ void setup() {
     display.println(addrStr);
     display.display(); 
 
-    // mqttReconnectTimmer = xTimerCreate( 
-    //     "mqttTimer", 
-    //     pdMS_TO_TICKS(2000), 
-    //     pdFALSE, 
-    //     (void*)0, 
-    //     reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
-    // );
+    mqttReconnectTimmer = xTimerCreate( 
+        "mqttTimer", 
+        pdMS_TO_TICKS(2000), 
+        pdFALSE, 
+        (void*)0, 
+        reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
+    );
 
-    // wifiReconnecTimer = xTimerCreate(
-    //     "wifiTimer", 
-    //     pdMS_TO_TICKS(2000), 
-    //     pdFALSE, 
-    //     (void*)0, 
-    //     reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
-    // );
+    wifiReconnecTimer = xTimerCreate(
+        "wifiTimer", 
+        pdMS_TO_TICKS(2000), 
+        pdFALSE, 
+        (void*)0, 
+        reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
+    );
 
-    // WiFi.onEvent(WiFiEvent);
+    WiFi.onEvent(WiFiEvent);
 
-    // mqttClient.onConnect(onMqttConnect);
-    // mqttClient.onDisconnect(onMqttDisconnect);
-    // mqttClient.onPublish(onMqttPublish);
-    // mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+    mqttClient.onConnect(onMqttConnect);
+    mqttClient.onDisconnect(onMqttDisconnect);
+    mqttClient.onPublish(onMqttPublish);
+    // mqttClient.onSubscribe(onMqttSubscribe);
+    // mqttClient.onUnsubscribe(onMqttUnSubscribe);
+    // mqttClient.onMessage(onMqttMessage);
+    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
-    // mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
-    // connectToWifi();
+    mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
+    connectToWifi();
 }
 
 void loop() {
-    // unsigned long currentMillis = millis();
+    unsigned long currentMillis = millis();
 
-    // if (currentMillis - previousMillis >= interval)
-    // {
-    //     /* code */
-    //     previousMillis = currentMillis;
+    if (currentMillis - previousMillis >= interval)
+    {
+        /* code */
+        previousMillis = currentMillis;
 
-    //     // Publishing an LDR Sensor Value
-    //     uint16_t packetIdPubData = mqttClient.publish(
-    //         MQTT_PUB_TOPIC, 
-    //         1, 
-    //         true, 
-    //         String(datas).c_str()
-    //     );
-    //     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
-    // }
+        // Publishing an LDR Sensor Value
+        uint16_t packetIdPubData = mqttClient.publish(
+            MQTT_PUB_TOPIC, 
+            1, 
+            true, 
+            datas.c_str()
+        );
+        Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
+    }
 }
