@@ -134,7 +134,7 @@ void printPacket(dataPacket data) {
     doc["snr"] = sensorsPacket->snr;
 
     doc.shrinkToFit();
-    serializeJson(doc, datas);
+    // serializeJson(doc, datas);
     serializeJsonPretty(doc, Serial);
 }
 
@@ -568,51 +568,51 @@ void setup() {
     display.println(addrStr);
     display.display(); 
 
-    mqttReconnectTimmer = xTimerCreate( 
-        "mqttTimer", 
-        pdMS_TO_TICKS(2000), 
-        pdFALSE, 
-        (void*)0, 
-        reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
-    );
+    // mqttReconnectTimmer = xTimerCreate( 
+    //     "mqttTimer", 
+    //     pdMS_TO_TICKS(2000), 
+    //     pdFALSE, 
+    //     (void*)0, 
+    //     reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt)
+    // );
 
-    wifiReconnecTimer = xTimerCreate(
-        "wifiTimer", 
-        pdMS_TO_TICKS(2000), 
-        pdFALSE, 
-        (void*)0, 
-        reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
-    );
+    // wifiReconnecTimer = xTimerCreate(
+    //     "wifiTimer", 
+    //     pdMS_TO_TICKS(2000), 
+    //     pdFALSE, 
+    //     (void*)0, 
+    //     reinterpret_cast<TimerCallbackFunction_t>(connectToWifi)
+    // );
 
-    WiFi.onEvent(WiFiEvent);
+    // WiFi.onEvent(WiFiEvent);
 
-    mqttClient.onConnect(onMqttConnect);
-    mqttClient.onDisconnect(onMqttDisconnect);
-    mqttClient.onPublish(onMqttPublish);
-    // mqttClient.onSubscribe(onMqttSubscribe);
-    // mqttClient.onUnsubscribe(onMqttUnSubscribe);
-    // mqttClient.onMessage(onMqttMessage);
-    mqttClient.setServer(MQTT_HOST, MQTT_PORT);
+    // mqttClient.onConnect(onMqttConnect);
+    // mqttClient.onDisconnect(onMqttDisconnect);
+    // mqttClient.onPublish(onMqttPublish);
+    // // mqttClient.onSubscribe(onMqttSubscribe);
+    // // mqttClient.onUnsubscribe(onMqttUnSubscribe);
+    // // mqttClient.onMessage(onMqttMessage);
+    // mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
-    mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
-    connectToWifi();
+    // mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
+    // connectToWifi();
 }
 
 void loop() {
-    unsigned long currentMillis = millis();
+    // unsigned long currentMillis = millis();
 
-    if (currentMillis - previousMillis >= interval)
-    {
-        /* code */
-        previousMillis = currentMillis;
+    // if (currentMillis - previousMillis >= interval)
+    // {
+    //     /* code */
+    //     previousMillis = currentMillis;
 
-        // Publishing an LDR Sensor Value
-        uint16_t packetIdPubData = mqttClient.publish(
-            MQTT_PUB_TOPIC, 
-            1, 
-            true, 
-            datas.c_str()
-        );
-        Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
-    }
+    //     // Publishing an LDR Sensor Value
+    //     uint16_t packetIdPubData = mqttClient.publish(
+    //         MQTT_PUB_TOPIC, 
+    //         1, 
+    //         true, 
+    //         datas.c_str()
+    //     );
+    //     Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
+    // }
 }
