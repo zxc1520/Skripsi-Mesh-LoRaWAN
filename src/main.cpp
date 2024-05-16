@@ -134,7 +134,6 @@ void printPacket(dataPacket data) {
     doc["snr"] = sensorsPacket->snr;
 
     doc.shrinkToFit();
-    serializeJson(doc, datas);
     serializeJsonPretty(doc, Serial);
 }
 
@@ -176,6 +175,9 @@ void processReceivedPackets(void*) {
 
             //Print the data packet
             printDataPacket(packet);
+
+            // Sending payload over mqtt
+            serializeJson(doc, datas);
 
             //Delete the packet when used. It is very important to call this function to release the memory of the packet.
             radio.deletePacket(packet);
@@ -307,11 +309,12 @@ void sendLoRaMessage(void*) {
             sensorsPacket->cm = dist;
         }
 
+        AppPacket<dataPacket>* dp;
         char addrStr[15];
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-        sensorsPacket->src = addrStr;
+        sensorsPacket->src = dp->src;
 
         if (!Rtc.IsDateTimeValid()) 
         {
