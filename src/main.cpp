@@ -174,6 +174,11 @@ void processReceivedPackets(void*) {
             //Get the first element inside the Received User Packets Queue
             AppPacket<dataPacket>* packet = radio.getNextAppPacket<dataPacket>();
 
+            tone(4, 1000);
+            delay(100);
+            noTone(4);
+            delay(100);
+
             //Print the data packet
             printDataPacket(packet);
 
@@ -488,6 +493,8 @@ void setup() {
 
     Rtc.Begin();
 
+    pinMode(4, OUTPUT);
+
     Serial.println("initBoard");
     pinMode(BOARD_LED, OUTPUT); //setup pin as output for indicator LED
     led_Flash(2, 125);          //two quick LED flashes to indicate program start
@@ -599,6 +606,7 @@ void setup() {
 }
 
 void loop() {
+    
     // unsigned long currentMillis = millis();
 
     // if (currentMillis - previousMillis >= interval)
