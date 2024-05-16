@@ -312,6 +312,7 @@ void sendLoRaMessage(void*) {
             sensorsPacket->cm = dist;
         }
 
+        // AppPacket<dataPacket>* dp;
         char addrStr[15];
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
@@ -564,7 +565,7 @@ void setup() {
     }
     delay(2000);
     display.clearDisplay();
-
+    
     char addrStr[15];
     snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
 
