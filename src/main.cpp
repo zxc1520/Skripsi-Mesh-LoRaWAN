@@ -309,12 +309,11 @@ void sendLoRaMessage(void*) {
             sensorsPacket->cm = dist;
         }
 
-        AppPacket<dataPacket>* dp;
         char addrStr[15];
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-        sensorsPacket->src = dp->src;
+        sensorsPacket->src = addrStr;
 
         if (!Rtc.IsDateTimeValid()) 
         {
