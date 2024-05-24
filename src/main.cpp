@@ -380,9 +380,10 @@ void sendLoRaMessage(void *)
         doc["ldr"] = masterData->ldrData;
         doc["humid"] = masterData->humidData;
         doc["temp"] = masterData->tempData;
-        doc["dist"] = masterData->distData;
+        doc["distance"] = masterData->distData;
         doc["address_origin"] = masterData->srcData;
         doc["node_timestamp"] = masterData->nodeTimestampData;
+        doc["arrived_timestamp"] = "n/a";
         doc["rssi"] = masterData->rssiData;
         doc["snr"] = masterData->snrData;
 
@@ -390,29 +391,29 @@ void sendLoRaMessage(void *)
         serializeJson(doc, mqttData);
 
         // Wait 20 seconds to send the next packet
-        delay(20000);
+        vTaskDelay(20000 / portTICK_PERIOD_MS);
     }
 }
 
-// TaskHandle_t sendLoRaMessage_Handle = NULL;
+TaskHandle_t sendLoRaMessage_Handle = NULL;
 
-// void createSendMessage()
-// {
+void createSendMessage()
+{
 
-//     BaseType_t res = xTaskCreate(
-//         sendLoRaMessage,
-//         "Send a LoRa Message Routine",
-//         4098,
-//         (void *)1,
-//         1,
-//         &sendLoRaMessage_Handle);
-//     if (res != pdPASS)
-//     {
-//         /* code */
-//         Serial.printf("Task creation gave error: %d\n");
-//         vTaskDelete(sendLoRaMessage_Handle);
-//     }
-// }
+    BaseType_t res = xTaskCreate(
+        sendLoRaMessage,
+        "Send a LoRa Message Routine",
+        4098,
+        (void *)1,
+        1,
+        &sendLoRaMessage_Handle);
+    if (res != pdPASS)
+    {
+        /* code */
+        Serial.printf("Task creation gave error: %d\n");
+        vTaskDelete(sendLoRaMessage_Handle);
+    }
+}
 
 void connectToWifi()
 {
