@@ -72,20 +72,16 @@ unsigned long previousMillis = 0;
 const long interval = 25000;
 
 String datas;
-char mqttData[128];
+String masterDatas;
 
-struct nodeMasterData
-{
-    int ldrData;
-    float tempData;
-    float humidData;
-    int distData;
-    String srcData;
-    String nodeTimestampData;
-    int8_t rssiData;
-    int8_t snrData;
-};
-nodeMasterData *masterData = new nodeMasterData;
+int ldrData;
+float tempData;
+float humidData;
+int distData;
+String srcData;
+String nodeTimestampData;
+int8_t rssiData;
+int8_t snrData;
 
 struct dataPacket
 {
@@ -302,118 +298,116 @@ bool wasError(const char *errorTopic = "")
     return false;
 }
 
-void sendLoRaMessage(void *)
+void sendLoRaMessage()
 {
-    for (;;)
-    {
-        Serial.printf("Send packet %d\n", dataCounter);
+    Serial.printf("Send packet %d\n", dataCounter);
 
-        int nilaiSensor = analogRead(LIGHT_DO);
-        masterData->ldrData = nilaiSensor;
+    int nilaiSensor = analogRead(LIGHT_DO);
+    ldrData = nilaiSensor;
 
-        float humid = dhtData.listen();
-        float temp = dhtData.temperature();
+    float humid = dhtData.listen();
+    float temp = dhtData.temperature();
 
-        if (isnan(humid) || isnan(temp))
-        {
-            /* code */
-            Serial.print("Failed to load sensor");
-        }
-        else
-        {
-            /* code */
-            masterData->humidData = humid;
-            masterData->tempData = temp;
-        }
-
-        int dist = distances.listen();
-
-        if (dist < 0)
-        {
-            Serial.print("Failed to attempt calculation !");
-        }
-        else
-        {
-            masterData->distData = dist;
-        }
-
-        char addrStr[15];
-        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
-
-        addrStr[n] = '\0';
-        masterData->srcData = addrStr;
-
-        if (!Rtc.IsDateTimeValid())
-        {
-            if (!wasError("loop IsDateTimeValid"))
-            {
-                Serial.println("RTC lost confidence in the DateTime!");
-            }
-        }
-
-        RtcDateTime date = Rtc.GetDateTime();
-        if (!wasError("loop GetDateTime"))
-        {
-            printDateTime(date);
-            Serial.println();
-        }
-
-        // uint32_t unixTime = now.Unix32Time();
-        char dateString[26];
-
-        snprintf_P(dateString,
-                   countof(dateString),
-                   PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-                   date.Year(),
-                   date.Month(),
-                   date.Day(),
-                   date.Hour(),
-                   date.Minute(),
-                   date.Second());
-
-        masterData->nodeTimestampData = dateString;
-
-        masterData->rssiData = radio.getLoraRssi();
-
-        masterData->snrData = radio.getLoraSnr();
-
-        doc["ldr"] = masterData->ldrData;
-        doc["humid"] = masterData->humidData;
-        doc["temp"] = masterData->tempData;
-        doc["distance"] = masterData->distData;
-        doc["address_origin"] = masterData->srcData;
-        doc["node_timestamp"] = masterData->nodeTimestampData;
-        doc["arrived_timestamp"] = "n/a";
-        doc["rssi"] = masterData->rssiData;
-        doc["snr"] = masterData->snrData;
-
-        doc.shrinkToFit();
-        serializeJson(doc, mqttData);
-
-        // Wait 20 seconds to send the next packet
-        vTaskDelay(20000 / portTICK_PERIOD_MS);
-    }
-}
-
-TaskHandle_t sendLoRaMessage_Handle = NULL;
-
-void createSendMessage()
-{
-
-    BaseType_t res = xTaskCreate(
-        sendLoRaMessage,
-        "Send a LoRa Message Routine",
-        4098,
-        (void *)1,
-        1,
-        &sendLoRaMessage_Handle);
-    if (res != pdPASS)
+    if (isnan(humid) || isnan(temp))
     {
         /* code */
-        Serial.printf("Task creation gave error: %d\n");
-        vTaskDelete(sendLoRaMessage_Handle);
+        Serial.print("Failed to load sensor");
     }
+    else
+    {
+        /* code */
+        humidData = humid;
+        tempData = temp;
+    }
+
+    int dist = distances.listen();
+
+    if (dist < 0)
+    {
+        Serial.print("Failed to attempt calculation !");
+    }
+    else
+    {
+        distData = dist;
+    }
+
+    char addrStr[15];
+    int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+    addrStr[n] = '\0';
+    srcData = addrStr;
+
+    if (!Rtc.IsDateTimeValid())
+    {
+        if (!wasError("loop IsDateTimeValid"))
+        {
+            Serial.println("RTC lost confidence in the DateTime!");
+        }
+    }
+
+    RtcDateTime date = Rtc.GetDateTime();
+    if (!wasError("loop GetDateTime"))
+    {
+        printDateTime(date);
+        Serial.println();
+    }
+
+    // uint32_t unixTime = now.Unix32Time();
+    char dateString[26];
+
+    snprintf_P(dateString,
+               countof(dateString),
+               PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+               date.Year(),
+               date.Month(),
+               date.Day(),
+               date.Hour(),
+               date.Minute(),
+               date.Second());
+
+    nodeTimestampData = dateString;
+
+    rssiData = radio.getLoraRssi();
+
+    snrData = radio.getLoraSnr();
+
+    doc["ldr"] = ldrData;
+    doc["humid"] = humidData;
+    doc["temp"] = tempData;
+    doc["distance"] = distData;
+    doc["address_origin"] = srcData;
+    doc["node_timestamp"] = nodeTimestampData;
+    doc["arrived_timestamp"] = "n/a";
+    doc["rssi"] = rssiData;
+    doc["snr"] = snrData;
+
+    doc.shrinkToFit();
+    serializeJson(doc, masterDatas);
+
+    // Wait 20 seconds to send the next packet
+    // vTaskDelay(20000 / portTICK_PERIOD_MS);
+    delay(5000);
 }
+
+// TaskHandle_t sendLoRaMessage_Handle = NULL;
+
+// void createSendMessage()
+// {
+
+//     BaseType_t res = xTaskCreate(
+//         sendLoRaMessage,
+//         "Send a LoRa Message Routine",
+//         4098,
+//         (void *)1,
+//         1,
+//         &sendLoRaMessage_Handle);
+//     if (res != pdPASS)
+//     {
+//         /* code */
+//         Serial.printf("Task creation gave error: %d\n");
+//         vTaskDelete(sendLoRaMessage_Handle);
+//     }
+// }
 
 void connectToWifi()
 {
@@ -639,9 +633,6 @@ void setup()
     mqttClient.onConnect(onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
     mqttClient.onPublish(onMqttPublish);
-    // mqttClient.onSubscribe(onMqttSubscribe);
-    // mqttClient.onUnsubscribe(onMqttUnSubscribe);
-    // mqttClient.onMessage(onMqttMessage);
     mqttClient.setServer(MQTT_HOST, MQTT_PORT);
 
     mqttClient.setCredentials(MQTT_USERNAME, MQTT_PASSWORD);
@@ -657,7 +648,8 @@ void loop()
         /* code */
         previousMillis = currentMillis;
 
-        // Publishing an LDR Sensor Value
+        sendLoRaMessage();
+        // Publishing slave's node data
         uint16_t packetIdPubData = mqttClient.publish(
             MQTT_PUB_TOPIC,
             1,
@@ -665,11 +657,12 @@ void loop()
             datas.c_str());
         Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_PUB_TOPIC, packetIdPubData, radio.getLocalAddress());
 
+        // Publishing master's node data
         uint16_t packetIdMaster = mqttClient.publish(
             MQTT_MASTER_PUB_TOPIC,
             1,
             true,
-            mqttData);
+            String(masterDatas).c_str());
         Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_MASTER_PUB_TOPIC, packetIdMaster, radio.getLocalAddress());
     }
 }
