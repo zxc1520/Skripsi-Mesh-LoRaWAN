@@ -122,6 +122,7 @@ void printPacket(dataPacket data)
     RtcDateTime receiverDate = Rtc.GetDateTime();
 
     char receiverDateString[26];
+    char sourceNodeDateString[26];
 
     snprintf_P(receiverDateString,
                countof(receiverDateString),
@@ -133,17 +134,29 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    sensorsPacket->arrivedTimestamp = receiverDateString;
+    snprintf_P(sourceNodeDateString,
+               countof(receiverDateString),
+               PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+               receiverDate.Year(),
+               receiverDate.Month(),
+               receiverDate.Day(),
+               receiverDate.Hour(),
+               receiverDate.Minute(),
+               receiverDate.Second());
 
-    doc["ldr"] = sensorsPacket->ldr;
-    doc["humid"] = sensorsPacket->humid;
-    doc["temp"] = sensorsPacket->temp;
-    doc["distance"] = sensorsPacket->cm;
-    doc["address_origin"] = sensorsPacket->arrivedTimestamp;
-    doc["node_timestamp"] = sensorsPacket->nodeTimestamp;
-    doc["arrived_timestamp"] = sensorsPacket->arrivedTimestamp;
-    doc["rssi"] = sensorsPacket->rssi;
-    doc["snr"] = sensorsPacket->snr;
+    data.arrivedTimestamp = receiverDateString;
+
+    data.nodeTimestamp = sourceNodeDateString;
+
+    doc["ldr"] = data.ldr;
+    doc["humid"] = data.humid;
+    doc["temp"] = data.temp;
+    doc["distance"] = data.cm;
+    doc["address_origin"] = data.src;
+    doc["node_timestamp"] = data.nodeTimestamp;
+    doc["arrived_timestamp"] = data.arrivedTimestamp;
+    doc["rssi"] = data.rssi;
+    doc["snr"] = data.snr;
     doc.shrinkToFit();
 
     serializeJsonPretty(doc, Serial);
