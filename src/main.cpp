@@ -372,25 +372,25 @@ void sendLoRaMessage(void *)
     }
 }
 
-// TaskHandle_t sendLoRaMessage_Handle = NULL;
+TaskHandle_t sendLoRaMessage_Handle = NULL;
 
-// void createSendMessage()
-// {
+void createSendMessage()
+{
 
-//     BaseType_t res = xTaskCreate(
-//         sendLoRaMessage,
-//         "Send a LoRa Message Routine",
-//         4098,
-//         (void *)1,
-//         1,
-//         &sendLoRaMessage_Handle);
-//     if (res != pdPASS)
-//     {
-//         /* code */
-//         Serial.printf("Task creation gave error: %d\n");
-//         vTaskDelete(sendLoRaMessage_Handle);
-//     }
-// }
+    BaseType_t res = xTaskCreate(
+        sendLoRaMessage,
+        "Send a LoRa Message Routine",
+        4098,
+        (void *)1,
+        1,
+        &sendLoRaMessage_Handle);
+    if (res != pdPASS)
+    {
+        /* code */
+        Serial.printf("Task creation gave error: %d\n");
+        vTaskDelete(sendLoRaMessage_Handle);
+    }
+}
 
 void setup()
 {
