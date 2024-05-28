@@ -194,9 +194,16 @@ void processReceivedPackets(void *)
         ulTaskNotifyTake(pdPASS, portMAX_DELAY);
         led_Flash(1, 100); // one quick LED flashes to indicate a packet has arrived
 
+        char addrStr[15];
+        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+        addrStr[n] = '\0';
+        srcData = addrStr;
+
         // Iterate through all the packets inside the Received User Packets Queue
         while (radio.getReceivedQueueSize() > 0)
         {
+
             Serial.println("ReceivedUserData_TaskHandle notify received");
             Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
 
@@ -311,7 +318,7 @@ bool wasError(const char *errorTopic = "")
     return false;
 }
 
-void sendLoRaMessage()
+void sendLoRaMessage(void *)
 {
     Serial.printf("Send packet %d\n", dataCounter);
 
@@ -398,29 +405,28 @@ void sendLoRaMessage()
     serializeJson(doc, masterDatas);
 
     // Wait 20 seconds to send the next packet
-    // vTaskDelay(20000 / portTICK_PERIOD_MS);
-    delay(5000);
+    vTaskDelay(5000 / portTICK_PERIOD_MS);
 }
 
-// TaskHandle_t sendLoRaMessage_Handle = NULL;
+TaskHandle_t sendLoRaMessage_Handle = NULL;
 
-// void createSendMessage()
-// {
+void createSendMessage()
+{
 
-//     BaseType_t res = xTaskCreate(
-//         sendLoRaMessage,
-//         "Send a LoRa Message Routine",
-//         4098,
-//         (void *)1,
-//         1,
-//         &sendLoRaMessage_Handle);
-//     if (res != pdPASS)
-//     {
-//         /* code */
-//         Serial.printf("Task creation gave error: %d\n");
-//         vTaskDelete(sendLoRaMessage_Handle);
-//     }
-// }
+    BaseType_t res = xTaskCreate(
+        sendLoRaMessage,
+        "Send a LoRa Message Routine",
+        4098,
+        (void *)1,
+        1,
+        &sendLoRaMessage_Handle);
+    if (res != pdPASS)
+    {
+        /* code */
+        Serial.printf("Task creation gave error: %d\n");
+        vTaskDelete(sendLoRaMessage_Handle);
+    }
+}
 
 void connectToWifi()
 {
@@ -661,7 +667,6 @@ void loop()
         /* code */
         previousMillis = currentMillis;
 
-        sendLoRaMessage();
         // Publishing slave's node data
         uint16_t packetIdPubData = mqttClient.publish(
             MQTT_PUB_TOPIC,
