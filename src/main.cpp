@@ -194,12 +194,6 @@ void processReceivedPackets(void *)
         ulTaskNotifyTake(pdPASS, portMAX_DELAY);
         led_Flash(1, 100); // one quick LED flashes to indicate a packet has arrived
 
-        char addrStr[15];
-        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
-
-        addrStr[n] = '\0';
-        srcData = addrStr;
-
         // Iterate through all the packets inside the Received User Packets Queue
         while (radio.getReceivedQueueSize() > 0)
         {
