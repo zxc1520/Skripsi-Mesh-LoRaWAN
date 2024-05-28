@@ -165,18 +165,17 @@ void processReceivedPackets(void *)
 
         while (radio.getReceivedQueueSize() > 0)
         {
+            // Get the first element inside the Received User Packets Queue
+            AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
             if (addrStr != "85CC")
             {
                 /* code */
-                createSendMessage();
+                radio.createPacketAndSend(BROADCAST_ADDR, packet->payload, 1);
             }
             else
             {
                 Serial.println("ReceivedUserData_TaskHandle notify received");
                 Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
-
-                // Get the first element inside the Received User Packets Queue
-                AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
 
                 tone(4, 1000);
                 delay(100);
@@ -373,25 +372,25 @@ void sendLoRaMessage(void *)
     }
 }
 
-TaskHandle_t sendLoRaMessage_Handle = NULL;
+// TaskHandle_t sendLoRaMessage_Handle = NULL;
 
-void createSendMessage()
-{
+// void createSendMessage()
+// {
 
-    BaseType_t res = xTaskCreate(
-        sendLoRaMessage,
-        "Send a LoRa Message Routine",
-        4098,
-        (void *)1,
-        1,
-        &sendLoRaMessage_Handle);
-    if (res != pdPASS)
-    {
-        /* code */
-        Serial.printf("Task creation gave error: %d\n");
-        vTaskDelete(sendLoRaMessage_Handle);
-    }
-}
+//     BaseType_t res = xTaskCreate(
+//         sendLoRaMessage,
+//         "Send a LoRa Message Routine",
+//         4098,
+//         (void *)1,
+//         1,
+//         &sendLoRaMessage_Handle);
+//     if (res != pdPASS)
+//     {
+//         /* code */
+//         Serial.printf("Task creation gave error: %d\n");
+//         vTaskDelete(sendLoRaMessage_Handle);
+//     }
+// }
 
 void setup()
 {
@@ -408,7 +407,7 @@ void setup()
     led_Flash(2, 125);          // two quick LED flashes to indicate program start
     setupLoraMesher();
 
-    createSendMessage();
+    // createSendMessage();
 
 #if defined(WIRE_HAS_TIMEOUT)
     Wire.setWireTimeout(3000 /* us */, true /* reset_on_timeout */);
