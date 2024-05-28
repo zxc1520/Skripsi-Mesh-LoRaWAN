@@ -158,11 +158,6 @@ void processReceivedPackets(void *)
         led_Flash(1, 100); // one quick LED flashes to indicate a packet has arrived
 
         // Iterate through all the packets inside the Received User Packets Queue
-        char addrStr[15];
-        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
-
-        addrStr[n] = '\0';
-
         while (radio.getReceivedQueueSize() > 0)
         {
 
