@@ -158,24 +158,37 @@ void processReceivedPackets(void *)
         led_Flash(1, 100); // one quick LED flashes to indicate a packet has arrived
 
         // Iterate through all the packets inside the Received User Packets Queue
+        char addrStr[15];
+        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+        addrStr[n] = '\0';
+
+        // Get the first element inside the Received User Packets Queue
+        AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
+
         while (radio.getReceivedQueueSize() > 0)
         {
+            if (addrStr != "85CC")
+            {
+                /* code */
+                radio.createPacketAndSend(BROADCAST_ADDR, packet->payload, 1);
+            }
+            else
+            {
+                Serial.println("ReceivedUserData_TaskHandle notify received");
+                Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
 
-            Serial.println("ReceivedUserData_TaskHandle notify received");
-            Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
+                tone(4, 1000);
+                delay(100);
+                noTone(4);
+                delay(100);
 
-            // Get the first element inside the Received User Packets Queue
-            AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
-            tone(4, 1000);
-            delay(100);
-            noTone(4);
-            delay(100);
+                // Print the data packet
+                printDataPacket(packet);
 
-            // Print the data packet
-            printDataPacket(packet);
-
-            // Delete the packet when used. It is very important to call this function to release the memory of the packet.
-            radio.deletePacket(packet);
+                // Delete the packet when used. It is very important to call this function to release the memory of the packet.
+                radio.deletePacket(packet);
+            }
         }
     }
 }
@@ -395,7 +408,7 @@ void setup()
     led_Flash(2, 125);          // two quick LED flashes to indicate program start
     setupLoraMesher();
 
-    // createSendMessage();
+    createSendMessage();
 
 #if defined(WIRE_HAS_TIMEOUT)
     Wire.setWireTimeout(3000 /* us */, true /* reset_on_timeout */);
