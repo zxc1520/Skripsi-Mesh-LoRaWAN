@@ -312,7 +312,7 @@ bool wasError(const char *errorTopic = "")
     return false;
 }
 
-void sendLoRaMessage(void *)
+void sendLoRaMessage()
 {
     Serial.printf("Send packet %d\n", dataCounter);
 
@@ -399,28 +399,29 @@ void sendLoRaMessage(void *)
     serializeJson(doc, masterDatas);
 
     // Wait 20 seconds to send the next packet
-    vTaskDelay(5000 / portTICK_PERIOD_MS);
+    // vTaskDelay(5000 / portTICK_PERIOD_MS);
+    delay(5000);
 }
 
-TaskHandle_t sendLoRaMessage_Handle = NULL;
+// TaskHandle_t sendLoRaMessage_Handle = NULL;
 
-void createSendMessage()
-{
+// void createSendMessage()
+// {
 
-    BaseType_t res = xTaskCreate(
-        sendLoRaMessage,
-        "Send a LoRa Message Routine",
-        4098,
-        (void *)1,
-        1,
-        &sendLoRaMessage_Handle);
-    if (res != pdPASS)
-    {
-        /* code */
-        Serial.printf("Task creation gave error: %d\n");
-        vTaskDelete(sendLoRaMessage_Handle);
-    }
-}
+//     BaseType_t res = xTaskCreate(
+//         sendLoRaMessage,
+//         "Send a LoRa Message Routine",
+//         4098,
+//         (void *)1,
+//         1,
+//         &sendLoRaMessage_Handle);
+//     if (res != pdPASS)
+//     {
+//         /* code */
+//         Serial.printf("Task creation gave error: %d\n");
+//         vTaskDelete(sendLoRaMessage_Handle);
+//     }
+// }
 
 void connectToWifi()
 {
@@ -661,6 +662,7 @@ void loop()
         /* code */
         previousMillis = currentMillis;
 
+        sendLoRaMessage();
         // Publishing slave's node data
         uint16_t packetIdPubData = mqttClient.publish(
             MQTT_PUB_TOPIC,
