@@ -162,29 +162,33 @@ void processReceivedPackets(void *)
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-        if (addrStr != "85CC")
-        {
-            /* code */
-                }
 
         while (radio.getReceivedQueueSize() > 0)
         {
-            Serial.println("ReceivedUserData_TaskHandle notify received");
-            Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
+            if (addrStr != "85CC")
+            {
+                /* code */
+                createSendMessage();
+            }
+            else
+            {
+                Serial.println("ReceivedUserData_TaskHandle notify received");
+                Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
 
-            // Get the first element inside the Received User Packets Queue
-            AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
+                // Get the first element inside the Received User Packets Queue
+                AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
 
-            tone(4, 1000);
-            delay(100);
-            noTone(4);
-            delay(100);
+                tone(4, 1000);
+                delay(100);
+                noTone(4);
+                delay(100);
 
-            // Print the data packet
-            printDataPacket(packet);
+                // Print the data packet
+                printDataPacket(packet);
 
-            // Delete the packet when used. It is very important to call this function to release the memory of the packet.
-            radio.deletePacket(packet);
+                // Delete the packet when used. It is very important to call this function to release the memory of the packet.
+                radio.deletePacket(packet);
+            }
         }
     }
 }
