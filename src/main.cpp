@@ -222,8 +222,16 @@ void createReceiveMessages()
  */
 void setupLoraMesher()
 {
+    LoraMesher::LoraMesherConfig config = LoraMesher::LoraMesherConfig();
+    config.loraCs = 18;
+    config.loraRst = 23;
+    config.loraIo1 = 26;
+
+    config.freq = 915.0;
+    config.module = LoraMesher::LoraModules::SX1276_MOD;
+
     // Init the loramesher with a processReceivedPackets function
-    radio.begin();
+    radio.begin(config);
 
     // Create the receive task and add it to the LoRaMesher
     createReceiveMessages();
