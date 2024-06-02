@@ -66,6 +66,7 @@ struct dataPacket
     float humid;
     int cm;
     String src;
+    String addrsVia;
     String nodeTimestamp;
     String arrivedTimestamp;
     int8_t rssi;
@@ -109,6 +110,12 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
+    char addrStr[15];
+    int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+    addrStr[n] = '\0';
+    sensorsPacket->addrsVia = addrStr;
+
     sensorsPacket->arrivedTimestamp = receiverDateString;
 
     doc["ldr"] = sensorsPacket->ldr;
@@ -116,6 +123,7 @@ void printPacket(dataPacket data)
     doc["temp"] = sensorsPacket->temp;
     doc["distance"] = sensorsPacket->cm;
     doc["address_origin"] = sensorsPacket->src;
+    doc["address_via"] = sensorsPacket->addrsVia;
     doc["node_timestamp"] = sensorsPacket->nodeTimestamp;
     doc["arrived_timestamp"] = sensorsPacket->arrivedTimestamp;
     doc["rssi"] = sensorsPacket->rssi;
@@ -171,20 +179,14 @@ void processReceivedPackets(void *)
             if (addrStr != "85CC")
             {
                 /* code */
-                radio.createPacketAndSend(BROADCAST_ADDR, packet->payload, 1);
-            }
-            else
-            {
                 Serial.println("ReceivedUserData_TaskHandle notify received");
                 Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
 
-                tone(4, 1000);
-                delay(100);
-                noTone(4);
-                delay(100);
-
                 // Print the data packet
                 printDataPacket(packet);
+
+                // Re-route the data packet via broadcast address
+                radio.createPacketAndSend(BROADCAST_ADDR, packet->payload, 1);
 
                 // Delete the packet when used. It is very important to call this function to release the memory of the packet.
                 radio.deletePacket(packet);
@@ -223,12 +225,16 @@ void createReceiveMessages()
 void setupLoraMesher()
 {
     LoraMesher::LoraMesherConfig config = LoraMesher::LoraMesherConfig();
+
+    // Configuring Lora TTGO T3 V 1.6.1 Board pinout
+    config.module = LoraMesher::LoraModules::SX1276_MOD;
     config.loraCs = 18;
     config.loraRst = 23;
     config.loraIo1 = 26;
 
+    // Defining Allowed LoRa Band Indonesia
+    // Operating in 433 Mhz & 915 Mhz
     config.freq = 915.0;
-    config.module = LoraMesher::LoraModules::SX1276_MOD;
 
     // Init the loramesher with a processReceivedPackets function
     radio.begin(config);
