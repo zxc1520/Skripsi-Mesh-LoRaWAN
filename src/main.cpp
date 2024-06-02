@@ -113,10 +113,14 @@ void printPacket(dataPacket data)
     char addrStr[15];
     int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
-    addrStr[n] = '\0';
-    sensorsPacket->addrsVia = addrStr;
+    if (sensorsPacket->addrsVia == " ")
+    {
+        /* code */
+        addrStr[n] = '\0';
+        sensorsPacket->addrsVia = addrStr;
 
-    sensorsPacket->arrivedTimestamp = receiverDateString;
+        sensorsPacket->arrivedTimestamp = receiverDateString;
+    }
 
     doc["ldr"] = sensorsPacket->ldr;
     doc["humid"] = sensorsPacket->humid;
