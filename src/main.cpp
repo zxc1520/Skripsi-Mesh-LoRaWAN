@@ -113,7 +113,7 @@ void printPacket(dataPacket data)
     char addrStr[15];
     int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
-    if (sensorsPacket->addrsVia == " ")
+    if (sensorsPacket->addrsVia == "")
     {
         /* code */
         addrStr[n] = '\0';
