@@ -90,6 +90,7 @@ struct dataPacket
     float humid;
     int cm;
     String src;
+    String addrVia;
     String nodeTimestamp;
     String arrivedTimestamp;
     int8_t rssi;
@@ -144,6 +145,16 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
+    if (data.addrVia == " ")
+    {
+        /* code */
+        char addrStr[15];
+        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+
+        addrStr[n] = '\0';
+        data.addrVia = addrStr;
+    }
+
     data.arrivedTimestamp = receiverDateString;
 
     data.nodeTimestamp = sourceNodeDateString;
@@ -153,6 +164,7 @@ void printPacket(dataPacket data)
     doc["temp"] = data.temp;
     doc["distance"] = data.cm;
     doc["address_origin"] = data.src;
+    doc["address_via"] = data.addrVia;
     doc["node_timestamp"] = data.nodeTimestamp;
     doc["arrived_timestamp"] = data.arrivedTimestamp;
     doc["rssi"] = data.rssi;
