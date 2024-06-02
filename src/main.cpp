@@ -145,7 +145,7 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    if (data.addrVia == " ")
+    if (data.addrVia == "")
     {
         /* code */
         char addrStr[15];
