@@ -109,17 +109,15 @@ void printPacket(dataPacket data)
                receiverDate.Hour(),
                receiverDate.Minute(),
                receiverDate.Second());
-
-    char addrStr[15];
-    int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
+    sensorsPacket->arrivedTimestamp = receiverDateString;
 
     if (sensorsPacket->addrsVia == "")
     {
         /* code */
+        char addrStr[15];
+        int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
         addrStr[n] = '\0';
         sensorsPacket->addrsVia = addrStr;
-
-        sensorsPacket->arrivedTimestamp = receiverDateString;
     }
 
     doc["ldr"] = sensorsPacket->ldr;
