@@ -145,30 +145,30 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    if (sensorsPacket->addrVia == "")
+    if (data.addrVia == "")
     {
         /* code */
         char addrStr[15];
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-        sensorsPacket->addrVia = addrStr;
+        data.addrVia = addrStr;
     }
 
-    sensorsPacket->arrivedTimestamp = receiverDateString;
+    data.arrivedTimestamp = receiverDateString;
 
-    sensorsPacket->nodeTimestamp = sourceNodeDateString;
+    data.nodeTimestamp = sourceNodeDateString;
 
-    doc["ldr"] = sensorsPacket->ldr;
-    doc["humid"] = sensorsPacket->humid;
-    doc["temp"] = sensorsPacket->temp;
-    doc["distance"] = sensorsPacket->cm;
-    doc["address_origin"] = sensorsPacket->src;
-    doc["address_via"] = sensorsPacket->addrVia;
-    doc["node_timestamp"] = sensorsPacket->nodeTimestamp;
-    doc["arrived_timestamp"] = sensorsPacket->arrivedTimestamp;
-    doc["rssi"] = sensorsPacket->rssi;
-    doc["snr"] = sensorsPacket->snr;
+    doc["ldr"] = data.ldr;
+    doc["humid"] = data.humid;
+    doc["temp"] = data.temp;
+    doc["distance"] = data.cm;
+    doc["address_origin"] = data.src;
+    doc["address_via"] = data.addrVia;
+    doc["node_timestamp"] = data.nodeTimestamp;
+    doc["arrived_timestamp"] = data.arrivedTimestamp;
+    doc["rssi"] = data.rssi;
+    doc["snr"] = data.snr;
     doc.shrinkToFit();
 
     serializeJsonPretty(doc, Serial);
