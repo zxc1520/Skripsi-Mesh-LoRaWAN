@@ -228,18 +228,18 @@ void setupLoraMesher()
 {
     LoraMesher::LoraMesherConfig config = LoraMesher::LoraMesherConfig();
 
-    // Configuring Lora TTGO T3 V 1.6.1 Board pinout
-    config.module = LoraMesher::LoraModules::SX1276_MOD;
-    config.loraCs = 18;
-    config.loraRst = 23;
-    config.loraIo1 = 26;
+    // // Configuring Lora TTGO T3 V 1.6.1 Board pinout
+    // config.module = LoraMesher::LoraModules::SX1276_MOD;
+    // config.loraCs = 18;
+    // config.loraRst = 23;
+    // config.loraIo1 = 26;
 
-    // Defining Allowed LoRa Band Indonesia
-    // Operating in 433 Mhz & 915 Mhz
-    config.freq = 915.0;
+    // // Defining Allowed LoRa Band Indonesia
+    // // Operating in 433 Mhz & 915 Mhz
+    // config.freq = 915.0;
 
     // Init the loramesher with a processReceivedPackets function
-    radio.begin(config);
+    radio.begin();
 
     // Create the receive task and add it to the LoRaMesher
     createReceiveMessages();
