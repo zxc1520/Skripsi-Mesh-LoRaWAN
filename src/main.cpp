@@ -75,6 +75,15 @@ struct dataPacket
 
 dataPacket *sensorsPacket = new dataPacket;
 
+int localLdr;
+float localTemp;
+float localHumid;
+int localCm;
+String localSrc;
+String localNodeTimestamp;
+int8_t localRssi;
+int8_t localSnr;
+
 // Led flash
 void led_Flash(uint16_t flashes, uint16_t delaymS)
 {
@@ -172,9 +181,8 @@ void processReceivedPackets(void *)
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-
-        // Get the first element inside the Received User Packets Queue
-        AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
+        Serial.printf("Local Address is: %s\n", addrStr);
+        Serial.printf("Local Hex Address is: %X\n", radio.getLocalAddress());
 
         while (radio.getReceivedQueueSize() > 0)
         {
@@ -184,11 +192,18 @@ void processReceivedPackets(void *)
                 Serial.println("ReceivedUserData_TaskHandle notify received");
                 Serial.printf("Queue receiveUserData size: %d\n", radio.getReceivedQueueSize());
 
+                // Get the first element inside the Received User Packets Queue
+                AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
+
+                Serial.println("Packet will be forwarded !");
+
                 // Print the data packet
                 printDataPacket(packet);
 
+                delay(5000);
+
                 // Re-route the data packet via broadcast address
-                radio.createPacketAndSend(BROADCAST_ADDR, packet->payload, 1);
+                radio.createPacketAndSend(BROADCAST_ADDR, packet, 1);
 
                 // Delete the packet when used. It is very important to call this function to release the memory of the packet.
                 radio.deletePacket(packet);
@@ -489,18 +504,80 @@ void setup()
     }
     delay(2000);
     display.clearDisplay();
+}
 
+void loop()
+{
     char addrStr[15];
     snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
 
     display.setTextSize(1);
     display.setTextColor(WHITE);
     display.setCursor(0, 10);
-    // Display static text
-    display.println(addrStr);
-    display.display();
-}
 
-void loop()
-{
+    int nilaiSensor = analogRead(LIGHT_DO);
+
+    float humid = dhtData.listen();
+    float temp = dhtData.temperature();
+
+    if (isnan(humid) || isnan(temp))
+    {
+        /* code */
+        Serial.print("Failed to load sensor");
+    }
+    else
+    {
+        /* code */
+        humid;
+        temp;
+    }
+
+    int dist = distances.listen();
+
+    if (dist < 0)
+    {
+        Serial.print("Failed to attempt calculation !");
+    }
+    else
+    {
+        dist;
+    }
+
+    if (!Rtc.IsDateTimeValid())
+    {
+        if (!wasError("loop IsDateTimeValid"))
+        {
+            Serial.println("RTC lost confidence in the DateTime!");
+        }
+    }
+
+    RtcDateTime date = Rtc.GetDateTime();
+    if (!wasError("loop GetDateTime"))
+    {
+        printDateTime(date);
+        Serial.println();
+    }
+
+    char dateString[26];
+
+    snprintf_P(dateString,
+               countof(dateString),
+               PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+               date.Year(),
+               date.Month(),
+               date.Day(),
+               date.Hour(),
+               date.Minute(),
+               date.Second());
+
+    display.println(addrStr);
+    display.setCursor(0, 20);
+    display.printf("LDR %d\n", nilaiSensor);
+    display.printf("Hum %.2f %\n", humid);
+    display.printf("Temp %.2f%cc\n", temp, 247);
+    display.printf("Dist %d cm\n", dist);
+    display.printf("Time %s ", dateString);
+    display.display();
+    delay(20000);
+    display.clearDisplay();
 }
