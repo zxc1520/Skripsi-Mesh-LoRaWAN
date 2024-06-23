@@ -195,15 +195,13 @@ void processReceivedPackets(void *)
                 // Get the first element inside the Received User Packets Queue
                 AppPacket<dataPacket> *packet = radio.getNextAppPacket<dataPacket>();
 
-                Serial.println("Packet will be forwarded !");
-
                 // Print the data packet
                 printDataPacket(packet);
 
-                delay(5000);
-
                 // Re-route the data packet via broadcast address
-                radio.createPacketAndSend(BROADCAST_ADDR, packet, 1);
+                radio.createPacketAndSend(0x85CC, packet, 1);
+
+                Serial.printf("Packet will be forwarded to %d", packet->dst);
 
                 // Delete the packet when used. It is very important to call this function to release the memory of the packet.
                 radio.deletePacket(packet);
