@@ -203,7 +203,7 @@ void processReceivedPackets(void *)
                 delay(5000);
 
                 // Re-route the data packet via broadcast address
-                radio.createPacketAndSend(BROADCAST_ADDR, packet, 1);
+                radio.createPacketAndSend(0xECB0, packet, 1);
 
                 // Delete the packet when used. It is very important to call this function to release the memory of the packet.
                 radio.deletePacket(packet);
