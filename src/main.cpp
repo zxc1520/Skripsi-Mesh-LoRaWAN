@@ -395,7 +395,7 @@ void sendLoRaMessage(void *)
         sensorsPacket->snr = radio.getLoraSnr();
 
         // Create packet and send it.
-        radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
+        radio.createPacketAndSend(0x85CC, sensorsPacket, 1);
 
         // Wait 20 seconds to send the next packet
         vTaskDelay(20000 / portTICK_PERIOD_MS);
