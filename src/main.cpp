@@ -203,7 +203,9 @@ void processReceivedPackets(void *)
                 delay(5000);
 
                 // Re-route the data packet via broadcast address
-                radio.createPacketAndSend(0xECB0, packet, 1);
+                radio.createPacketAndSend(0x85CC, packet, 1);
+
+                Serial.printf("Packet will be forwarded to %d", packet->dst);
 
                 // Delete the packet when used. It is very important to call this function to release the memory of the packet.
                 radio.deletePacket(packet);
@@ -397,7 +399,7 @@ void sendLoRaMessage(void *)
         sensorsPacket->snr = radio.getLoraSnr();
 
         // Create packet and send it.
-        radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
+        radio.createPacketAndSend(0x85CC, sensorsPacket, 1);
 
         // Wait 20 seconds to send the next packet
         vTaskDelay(20000 / portTICK_PERIOD_MS);
