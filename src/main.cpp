@@ -203,7 +203,9 @@ void processReceivedPackets(void *)
                 delay(5000);
 
                 // Re-route the data packet via broadcast address
-                radio.createPacketAndSend(0xECB0, packet, 1);
+                // radio.createPacketAndSend(0xECB0, packet, 1);
+
+                radio.sendReliable(0xECB0, packet, 1);
 
                 Serial.printf("Packet will be forwarded to %d", packet->dst);
 
