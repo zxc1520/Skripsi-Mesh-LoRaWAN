@@ -135,15 +135,15 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    snprintf_P(sourceNodeDateString,
-               countof(receiverDateString),
-               PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-               receiverDate.Year(),
-               receiverDate.Month(),
-               receiverDate.Day(),
-               receiverDate.Hour(),
-               receiverDate.Minute(),
-               receiverDate.Second());
+    // snprintf_P(sourceNodeDateString,
+    //            countof(receiverDateString),
+    //            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+    //            receiverDate.Year(),
+    //            receiverDate.Month(),
+    //            receiverDate.Day(),
+    //            receiverDate.Hour(),
+    //            receiverDate.Minute(),
+    //            receiverDate.Second());
 
     if (data.addrVia == "")
     {
@@ -157,7 +157,7 @@ void printPacket(dataPacket data)
 
     data.arrivedTimestamp = receiverDateString;
 
-    data.nodeTimestamp = sourceNodeDateString;
+    // data.nodeTimestamp = sourceNodeDateString;
 
     doc["ldr"] = data.ldr;
     doc["humid"] = data.humid;
