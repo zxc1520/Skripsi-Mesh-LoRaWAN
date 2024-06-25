@@ -404,7 +404,7 @@ void sendLoRaMessage(void *)
         radio.createPacketAndSend(0xECB0, sensorsPacket, 1);
 
         // Wait 20 seconds to send the next packet
-        vTaskDelay(25000 / portTICK_PERIOD_MS);
+        vTaskDelay(20000 / portTICK_PERIOD_MS);
     }
 }
 
