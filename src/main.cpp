@@ -199,9 +199,9 @@ void processReceivedPackets(void *)
                 printDataPacket(packet);
 
                 // Re-route the data packet via broadcast address
-                // radio.createPacketAndSend(0x85CC, packet, 1);
+                radio.createPacketAndSend(0x85CC, packet, 1);
 
-                radio.sendReliable(0x85CC, packet, 1);
+                // radio.sendReliable(0x85CC, packet, 1);
 
                 Serial.printf("Packet will be forwarded to %d", packet->dst);
 
@@ -400,7 +400,7 @@ void sendLoRaMessage(void *)
         radio.createPacketAndSend(0x85CC, sensorsPacket, 1);
 
         // Wait 20 seconds to send the next packet
-        vTaskDelay(20000 / portTICK_PERIOD_MS);
+        vTaskDelay(30000 / portTICK_PERIOD_MS);
     }
 }
 
