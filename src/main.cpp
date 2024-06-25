@@ -69,7 +69,7 @@ uint32_t dataCounter = 0;
 JsonDocument doc;
 
 unsigned long previousMillis = 0;
-const long interval = 30000;
+const long interval = 25000;
 
 String datas;
 String masterDatas;
