@@ -254,7 +254,7 @@ void setupLoraMesher()
     config.freq = 915.0;
 
     // Init the loramesher with a processReceivedPackets function
-    radio.begin();
+    radio.begin(config);
 
     // Create the receive task and add it to the LoRaMesher
     createReceiveMessages();
