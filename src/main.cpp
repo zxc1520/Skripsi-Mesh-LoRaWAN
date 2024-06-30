@@ -135,14 +135,10 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    // snprintf_P(sourceNodeDateString,
-    //            countof(sourceNodeDateString),
-    //            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-    //            data.nodeTimestamp);
-
-    int formatedSrcDate = snprintf(sourceNodeDateString, 32, "%02u-%02u-%02u %02u:%02u:%02u", data.nodeTimestamp);
-
-    sourceNodeDateString[formatedSrcDate] = '\0';
+    snprintf_P(sourceNodeDateString,
+               countof(sourceNodeDateString),
+               PSTR("2024-%02u-%02u %02u:%02u:%02u"),
+               data.nodeTimestamp);
 
     if (data.addrVia == "")
     {
