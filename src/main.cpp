@@ -382,8 +382,8 @@ void sendLoRaMessage(void *)
 
         snprintf_P(dateString,
                    countof(dateString),
-                   PSTR("2024-%02u-%04u %02u:%02u:%02u"),
-
+                   PSTR("%04u-%02u-%04u %02u:%02u:%02u"),
+                   date.Year(),
                    date.Month(),
                    date.Day(),
                    date.Hour(),
