@@ -123,7 +123,7 @@ void printPacket(dataPacket data)
     RtcDateTime receiverDate = Rtc.GetDateTime();
 
     char receiverDateString[26];
-    char sourceNodeDateString[26];
+    char sourceNodeDateString[32];
 
     snprintf_P(receiverDateString,
                countof(receiverDateString),
@@ -135,15 +135,14 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    snprintf_P(sourceNodeDateString,
-               countof(receiverDateString),
-               PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-               receiverDate.Year(),
-               receiverDate.Month(),
-               receiverDate.Day(),
-               receiverDate.Hour(),
-               receiverDate.Minute(),
-               receiverDate.Second());
+    // snprintf_P(sourceNodeDateString,
+    //            countof(sourceNodeDateString),
+    //            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
+    //            data.nodeTimestamp);
+
+    int formatedSrcDate = snprintf(sourceNodeDateString, 32, "%02u-%02u-%02u %02u:%02u:%02u", data.nodeTimestamp);
+
+    sourceNodeDateString[formatedSrcDate] = '\0';
 
     if (data.addrVia == "")
     {
@@ -157,7 +156,7 @@ void printPacket(dataPacket data)
 
     data.arrivedTimestamp = receiverDateString;
 
-    data.nodeTimestamp = sourceNodeDateString;
+    // data.nodeTimestamp = sourceNodeDateString;
 
     doc["ldr"] = data.ldr;
     doc["humid"] = data.humid;
@@ -165,7 +164,7 @@ void printPacket(dataPacket data)
     doc["distance"] = data.cm;
     doc["address_origin"] = data.src;
     doc["address_via"] = data.addrVia;
-    doc["node_timestamp"] = data.nodeTimestamp;
+    doc["node_timestamp"] = sourceNodeDateString;
     doc["arrived_timestamp"] = data.arrivedTimestamp;
     doc["rssi"] = data.rssi;
     doc["snr"] = data.snr;
