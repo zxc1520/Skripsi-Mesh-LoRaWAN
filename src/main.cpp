@@ -380,18 +380,15 @@ void sendLoRaMessage(void *)
         // uint32_t unixTime = now.Unix32Time();
         char dateString[26];
 
-        // snprintf_P(dateString,
-        //            countof(dateString),
-        //            PSTR("%02u-%02u-%02u %02u:%02u:%02u"),
-        //            date.Year(),
-        //            date.Month(),
-        //            date.Day(),
-        //            date.Hour(),
-        //            date.Minute(),
-        //            date.Second());
-
-        int nDate = snprintf(dateString, 26, "%02u-%02u-%02u %02u:%02u:%02u", date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), date.Second());
-        dateString[nDate] = '\0';
+        snprintf_P(dateString,
+                   countof(dateString),
+                   PSTR("%02u-%02u-%04u %02u:%02u:%02u"),
+                   date.Year(),
+                   date.Month(),
+                   date.Day(),
+                   date.Hour(),
+                   date.Minute(),
+                   date.Second());
 
         sensorsPacket->nodeTimestamp = dateString;
 
