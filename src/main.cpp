@@ -91,7 +91,7 @@ struct dataPacket
     int cm;
     String src;
     String addrVia;
-    String nodeTimestamp;
+    char nodeTimestamp[26];
     String arrivedTimestamp;
     int8_t rssi;
     int8_t snr;
@@ -135,13 +135,12 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    snprintf_P(sourceNodeDateString,
-               countof(sourceNodeDateString),
-               PSTR("%04u-%02u-%02u %02u:%02u:%02u"),
-               data.nodeTimestamp);
-
-    int nData = snprintf(sourceNodeDateString, 32, "%04u-%02u-%02u %02u:%02u:%02u", data.nodeTimestamp);
-    sourceNodeDateString[nData] = '\0';
+    snprintf(sourceNodeDateString, sizeof(sourceNodeDateString), "%.4s-%.2s-%.2s %.2s:%.2s",
+             data.nodeTimestamp,
+             data.nodeTimestamp + 15,
+             data.nodeTimestamp + 18,
+             data.nodeTimestamp + 21,
+             data.nodeTimestamp + 24);
 
     if (data.addrVia == "")
     {
@@ -155,15 +154,13 @@ void printPacket(dataPacket data)
 
     data.arrivedTimestamp = receiverDateString;
 
-    data.nodeTimestamp = sourceNodeDateString;
-
     doc["ldr"] = data.ldr;
     doc["humid"] = data.humid;
     doc["temp"] = data.temp;
     doc["distance"] = data.cm;
     doc["address_origin"] = data.src;
     doc["address_via"] = data.addrVia;
-    doc["node_timestamp"] = data.nodeTimestamp;
+    doc["node_timestamp"] = sourceNodeDateString;
     doc["arrived_timestamp"] = data.arrivedTimestamp;
     doc["rssi"] = data.rssi;
     doc["snr"] = data.snr;
