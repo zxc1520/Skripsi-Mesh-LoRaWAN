@@ -137,13 +137,13 @@ void printPacket(dataPacket data)
 
     snprintf_P(sourceNodeDateString,
                countof(sourceNodeDateString),
-               PSTR("2024-%02u-%02u %02u:%02u:%02u"),
+               PSTR("%4u:%02u-%02u+ %02u:%02u:%02u"),
                data.nodeTimestamp);
 
-    char date[20];
+    // char date[26];
 
-    // Scan the string and extract the date part
-    sscanf(sourceNodeDateString, "%*d-%19[^\n]", date);
+    // // Scan the string and extract the date part
+    // sscanf(sourceNodeDateString, "%*d-%19[^\n]", date);
 
     if (data.addrVia == "")
     {
@@ -163,7 +163,7 @@ void printPacket(dataPacket data)
     doc["distance"] = data.cm;
     doc["address_origin"] = data.src;
     doc["address_via"] = data.addrVia;
-    doc["node_timestamp"] = date;
+    doc["node_timestamp"] = sourceNodeDateString;
     doc["arrived_timestamp"] = data.arrivedTimestamp;
     doc["rssi"] = data.rssi;
     doc["snr"] = data.snr;
