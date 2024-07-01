@@ -91,7 +91,7 @@ struct dataPacket
     int cm;
     String src;
     String addrVia;
-    char nodeTimestamp[26];
+    String nodeTimestamp;
     String arrivedTimestamp;
     int8_t rssi;
     int8_t snr;
@@ -135,12 +135,15 @@ void printPacket(dataPacket data)
                receiverDate.Minute(),
                receiverDate.Second());
 
-    snprintf(sourceNodeDateString, sizeof(sourceNodeDateString), "%.4s-%.2s-%.2s %.2s:%.2s",
-             data.nodeTimestamp,
-             data.nodeTimestamp + 15,
-             data.nodeTimestamp + 18,
-             data.nodeTimestamp + 21,
-             data.nodeTimestamp + 24);
+    snprintf_P(sourceNodeDateString,
+               countof(sourceNodeDateString),
+               PSTR("2024-%02u-%02u %02u:%02u:%02u"),
+               data.nodeTimestamp);
+
+    char date[20];
+
+    // Scan the string and extract the date part
+    sscanf(sourceNodeDateString, "%*d-%19[^\n]", date);
 
     if (data.addrVia == "")
     {
@@ -160,7 +163,7 @@ void printPacket(dataPacket data)
     doc["distance"] = data.cm;
     doc["address_origin"] = data.src;
     doc["address_via"] = data.addrVia;
-    doc["node_timestamp"] = sourceNodeDateString;
+    doc["node_timestamp"] = date;
     doc["arrived_timestamp"] = data.arrivedTimestamp;
     doc["rssi"] = data.rssi;
     doc["snr"] = data.snr;
