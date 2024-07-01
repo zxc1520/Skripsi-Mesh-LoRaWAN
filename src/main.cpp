@@ -137,7 +137,7 @@ void printPacket(dataPacket data)
 
     snprintf_P(sourceNodeDateString,
                countof(sourceNodeDateString),
-               PSTR("%4u:%02u-%02u %02u:%02u:%02u"),
+               PSTR("%4u-%02u-%02u %02u:%02u:%02u"),
                data.nodeTimestamp);
 
     // char date[26];
