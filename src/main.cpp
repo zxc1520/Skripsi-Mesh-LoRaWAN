@@ -377,20 +377,20 @@ void sendLoRaMessage(void *)
             Serial.println();
         }
 
-        // uint32_t unixTime = now.Unix32Time();
-        char dateString[26];
+        uint32_t unixTime = date.Unix32Time();
+        // char dateString[26];
 
-        snprintf_P(dateString,
-                   countof(dateString),
-                   PSTR("%04u-%02u-%04u %02u:%02u:%02u"),
-                   date.Year(),
-                   date.Month(),
-                   date.Day(),
-                   date.Hour(),
-                   date.Minute(),
-                   date.Second());
+        // snprintf_P(dateString,
+        //            countof(dateString),
+        //            PSTR("%04u-%02u-%04u %02u:%02u:%02u"),
+        //            date.Year(),
+        //            date.Month(),
+        //            date.Day(),
+        //            date.Hour(),
+        //            date.Minute(),
+        //            date.Second());
 
-        sensorsPacket->nodeTimestamp = dateString;
+        sensorsPacket->nodeTimestamp = unixTime;
 
         sensorsPacket->rssi = radio.getLoraRssi();
 
