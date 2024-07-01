@@ -91,7 +91,7 @@ struct dataPacket
     int cm;
     String src;
     String addrVia;
-    String nodeTimestamp;
+    uint32_t nodeTimestamp;
     String arrivedTimestamp;
     int8_t rssi;
     int8_t snr;
@@ -137,7 +137,7 @@ void printPacket(dataPacket data)
 
     snprintf_P(sourceNodeDateString,
                countof(sourceNodeDateString),
-               PSTR("%4u:%02u-%02u+ %02u:%02u:%02u"),
+               PSTR("%4u:%02u-%02u %02u:%02u:%02u"),
                data.nodeTimestamp);
 
     // char date[26];
