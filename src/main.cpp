@@ -67,7 +67,7 @@ struct dataPacket
     int cm;
     String src;
     String addrsVia;
-    String nodeTimestamp;
+    uint32_t nodeTimestamp;
     String arrivedTimestamp;
     int8_t rssi;
     int8_t snr;
