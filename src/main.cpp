@@ -170,10 +170,6 @@ void printPacket(dataPacket data)
     doc.shrinkToFit();
 
     serializeJsonPretty(doc, Serial);
-
-    free(receiverDateString);
-    free(sourceNodeDateString);
-    free(date);
 }
 
 /**
