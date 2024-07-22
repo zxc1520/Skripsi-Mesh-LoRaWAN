@@ -62,7 +62,6 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 LoraMesher &radio = LoraMesher::getInstance();
 DHTSensor dhtData(DHT_PIN, DHT11);
 HCSR04Sensor distances(ECHO_PIN, TRIG_PIN);
-// MQTTService mqtt(mqttClient, mqttReconnectTimmer, wifiReconnecTimer);
 
 uint32_t dataCounter = 0;
 
@@ -420,26 +419,6 @@ void sendLoRaMessage()
     // vTaskDelay(5000 / portTICK_PERIOD_MS);
     delay(5000);
 }
-
-// TaskHandle_t sendLoRaMessage_Handle = NULL;
-
-// void createSendMessage()
-// {
-
-//     BaseType_t res = xTaskCreate(
-//         sendLoRaMessage,
-//         "Send a LoRa Message Routine",
-//         4098,
-//         (void *)1,
-//         1,
-//         &sendLoRaMessage_Handle);
-//     if (res != pdPASS)
-//     {
-//         /* code */
-//         Serial.printf("Task creation gave error: %d\n");
-//         vTaskDelete(sendLoRaMessage_Handle);
-//     }
-// }
 
 void connectToWifi()
 {
