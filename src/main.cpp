@@ -676,4 +676,74 @@ void loop()
             String(masterDatas).c_str());
         Serial.printf("Publishing on topic %s at QoS 1, packetId: %i, from node: %d", MQTT_MASTER_PUB_TOPIC, packetIdMaster, radio.getLocalAddress());
     }
+
+    char addrStr[15];
+    snprintf(addrStr, 15, "Id: %X\r\n (master)", radio.getLocalAddress());
+
+    display.setTextSize(1);
+    display.setTextColor(WHITE);
+    display.setCursor(0, 10);
+
+    int nilaiSensor = analogRead(LIGHT_DO);
+
+    float humid = dhtData.listen();
+    float temp = dhtData.temperature();
+
+    if (isnan(humid) || isnan(temp))
+    {
+        /* code */
+        Serial.print("Failed to load sensor");
+    }
+    else
+    {
+        /* code */
+        humid;
+        temp;
+    }
+
+    int dist = distances.listen();
+
+    if (dist < 0)
+    {
+        Serial.print("Failed to attempt calculation !");
+    }
+    else
+    {
+        dist;
+    }
+
+    if (!Rtc.IsDateTimeValid())
+    {
+        if (!wasError("loop IsDateTimeValid"))
+        {
+            Serial.println("RTC lost confidence in the DateTime!");
+        }
+    }
+
+    RtcDateTime date = Rtc.GetDateTime();
+    if (!wasError("loop GetDateTime"))
+    {
+        printDateTime(date);
+        Serial.println();
+    }
+
+    char dateString[26];
+
+    snprintf_P(dateString,
+               countof(dateString),
+               PSTR("%02u:%02u:%02u"),
+               date.Hour(),
+               date.Minute(),
+               date.Second());
+
+    display.println(addrStr);
+    display.setCursor(0, 20);
+    display.printf("LDR %d\n", nilaiSensor);
+    display.printf("Hum %.2f %\n", humid);
+    display.printf("Temp %.2f%cc\n", temp, 247);
+    display.printf("Dist %d cm\n", dist);
+    display.printf("Time %s ", dateString);
+    display.display();
+    delay(20000);
+    display.clearDisplay();
 }
