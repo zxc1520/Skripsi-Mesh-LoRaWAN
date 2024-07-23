@@ -398,9 +398,9 @@ void sendLoRaMessage()
 
     nodeTimestampData = dateString;
 
-    rssiData = radio.getLoraRssi();
+    rssiData = LoRa.packetRssi();
 
-    snrData = radio.getLoraSnr();
+    snrData = LoRa.packetSnr();
 
     doc["ldr"] = ldrData;
     doc["humid"] = humidData;
