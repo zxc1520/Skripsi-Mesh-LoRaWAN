@@ -392,9 +392,9 @@ void sendLoRaMessage(void *)
 
         sensorsPacket->nodeTimestamp = unixTime;
 
-        sensorsPacket->rssi = radio.getLoraRssi();
+        sensorsPacket->rssi = LoRa.packetRssi();
 
-        sensorsPacket->snr = radio.getLoraSnr();
+        sensorsPacket->snr = LoRa.packetSnr();
 
         // Create packet and send it.
         radio.createPacketAndSend(BROADCAST_ADDR, sensorsPacket, 1);
