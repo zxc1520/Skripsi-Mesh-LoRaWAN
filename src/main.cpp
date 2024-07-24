@@ -615,15 +615,15 @@ void setup()
     delay(2000);
     display.clearDisplay();
 
-    char addrStr[15];
-    snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
+    // char addrStr[15];
+    // snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
 
-    display.setTextSize(1);
-    display.setTextColor(WHITE);
-    display.setCursor(0, 10);
-    // Display static text
-    display.println(addrStr);
-    display.display();
+    // display.setTextSize(1);
+    // display.setTextColor(WHITE);
+    // display.setCursor(0, 10);
+    // // Display static text
+    // display.println(addrStr);
+    // display.display();
 
     mqttReconnectTimmer = xTimerCreate(
         "mqttTimer",
@@ -678,7 +678,7 @@ void loop()
     }
 
     char addrStr[15];
-    snprintf(addrStr, 15, "Id: %X\r\n (master)", radio.getLocalAddress());
+    snprintf(addrStr, 15, "Id: %X (master) \r\n", radio.getLocalAddress());
 
     display.setTextSize(1);
     display.setTextColor(WHITE);
