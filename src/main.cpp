@@ -364,7 +364,7 @@ void sendLoRaMessage(void *)
         int n = snprintf(addrStr, 15, "%X", radio.getLocalAddress());
 
         addrStr[n] = '\0';
-        sensorsPacket->src = addrStr;
+        sensorsPacket->src = "EC6C";
 
         if (!Rtc.IsDateTimeValid())
         {
@@ -396,9 +396,9 @@ void sendLoRaMessage(void *)
 
         sensorsPacket->nodeTimestamp = dateString;
 
-        sensorsPacket->rssi = radio.getLoraRssi();
+        sensorsPacket->rssi = LoRa.packetRssi();
 
-        sensorsPacket->snr = radio.getLoraSnr();
+        sensorsPacket->snr = LoRa.packetSnr();
 
         // Create packet and send it.
         radio.createPacketAndSend(0xECB0, sensorsPacket, 1);
@@ -513,7 +513,7 @@ void setup()
 void loop()
 {
     char addrStr[15];
-    snprintf(addrStr, 15, "Id: %X\r\n", radio.getLocalAddress());
+    snprintf(addrStr, 15, "Id: EC6C");
 
     display.setTextSize(1);
     display.setTextColor(WHITE);
